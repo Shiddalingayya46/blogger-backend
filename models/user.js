@@ -4,7 +4,6 @@ const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        // trim: true,
         minlength: 2,
         maxlength: 100,
     },
@@ -12,9 +11,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
-        // lowercase: true,
-        // trim: true,
-        // match: [/^\S+@\S+\.\S+$/, 'Invalid email format'],
     },
     password: {
         type: String,
@@ -22,7 +18,8 @@ const userSchema = new mongoose.Schema({
         minlength: 6,
     },
 }, {
-    timestamps: true, // adds createdAt and updatedAt
+    timestamps: true,
 });
 
-module.exports = mongoose.model('User', userSchema);
+// ✅ Use existing model if already registered
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);

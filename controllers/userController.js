@@ -64,7 +64,7 @@ const login = async (req, res) => {
         if (!isMatch) {
             return res.status(401).json({ message: "Invalid credentials" });
         }
-
+        console.log(typeof (user._id))
 
         return res.status(200).json({ message: "success", userDetails: { userId: user._id, email: user.email } })
     } catch (err) {

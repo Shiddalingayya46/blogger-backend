@@ -1,17 +1,24 @@
-const post = require("../models/posts")
+const Post = require("../models/posts");
+const User = require("../models/user");
 
-// create User
 exports.createPost = async (req, res) => {
-    const { description, userId, likes, isDelete } = req.body;
-    try {
-        const post = await user.find({ userId })
-        if (!userId) return res.status(404).json({ message: " user  not found" })
+    const { description, userId } = req.body;
 
-        const posts = new post(req.body);
-        const SavedPost = await posts.save();
-        res.status(201).json(SavedPost);
-
-    } catch (error) {
-        res.status(500).json({ error: error.message })
+    if (!userId || !description) {
+        return res.status(400).json({ message: "description and userId are required" });
     }
-}
+
+    try {
+        const userExists = await User.findById(userId);
+        if (!userExists) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const newPost = new Post({ description, userId });
+        const savedPost = await newPost.save();
+
+        res.status(201).json(savedPost);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};

@@ -4,17 +4,18 @@ const PostSchema = new mongoose.Schema({
         type: String
     },
     userId: {
-        type: Number,
+        type: Object,
         required: true
     },
     likes: {
         type: Number,
-        required: true
+        required: true,
+        default: 0
     },
     isDelete: {
         type: Boolean
     }
 }, { timestamps: true });
-module.exports = mongoose.model('newuser', PostSchema);
+module.exports = mongoose.model('post', PostSchema);
 
 
