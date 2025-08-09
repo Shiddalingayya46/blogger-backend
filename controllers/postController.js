@@ -169,7 +169,7 @@ const permanentDeletePost = async (req, res) => {
 };
 module.exports = {
   createPost,
-  addLikes,
+  toggleLike,
   getAllPosts,
   getPostById,
   getPostsByUserId,
