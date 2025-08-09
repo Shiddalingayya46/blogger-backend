@@ -16,7 +16,6 @@ const createPost = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const isDelete = false;
     const newPost = new Post({ description, userId });
     const savedPost = await newPost.save();
 
@@ -29,6 +28,8 @@ const createPost = async (req, res) => {
 const addLikes = async (req, res) => {
   try {
     const { postId, userId } = req.body;
+    console.log('userId: ', userId);
+    console.log('postId: ', postId);
 
     if (!postId) {
       return res.status(400).json({ message: "Post ID cannot be empty" });
