@@ -25,11 +25,11 @@ const createPost = async (req, res) => {
   }
 };
 
-const addLikes = async (req, res) => {
+const toggleLike = async (req, res) => {
   try {
     const { postId, userId } = req.body;
-    console.log('userId: ', userId);
-    console.log('postId: ', postId);
+    console.log('userId:', userId);
+    console.log('postId:', postId);
 
     if (!postId) {
       return res.status(400).json({ message: "Post ID cannot be empty" });
@@ -45,20 +45,30 @@ const addLikes = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // Check if the user already liked the post
+    let action;
     if (post.likes.includes(userId)) {
-      return res.status(400).json({ message: "User already liked this post" });
+      // Unlike
+      post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+      action = "unliked";
+    } else {
+      // Like
+      post.likes.push(userId);
+      action = "liked";
     }
 
-    post.likes.push(userId);
     await post.save();
 
-    return res.status(200).json({ message: "Like added", likesCount: post.likes.length, likes: post.likes });
+    return res.status(200).json({
+      message: `Post ${action} successfully`,
+      likesCount: post.likes.length,
+      likes: post.likes
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 const getAllPosts = async (req, res) => {
