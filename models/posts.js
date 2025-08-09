@@ -5,7 +5,7 @@ const PostSchema = new mongoose.Schema(
       type: String,
     },
     userId: {
-      type: Object, 
+      type: Object,
       required: true,
     },
     likes: {
