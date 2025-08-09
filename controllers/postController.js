@@ -28,10 +28,14 @@ const createPost = async (req, res) => {
 
 const addLikes = async (req, res) => {
   try {
-    const { postId } = req.params;
+    const { postId, userId } = req.body;
 
     if (!postId) {
       return res.status(400).json({ message: "Post ID cannot be empty" });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ message: "User ID cannot be empty" });
     }
 
     const post = await Post.findOne({ _id: postId });
@@ -40,15 +44,21 @@ const addLikes = async (req, res) => {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    post.likes += 1;
+    // Check if the user already liked the post
+    if (post.likes.includes(userId)) {
+      return res.status(400).json({ message: "User already liked this post" });
+    }
+
+    post.likes.push(userId);
     await post.save();
 
-    return res.status(200).json({ message: "Like added", likes: post.likes });
+    return res.status(200).json({ message: "Like added", likesCount: post.likes.length, likes: post.likes });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 
 const getAllPosts = async (req, res) => {
   try {

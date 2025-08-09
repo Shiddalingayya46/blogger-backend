@@ -9,9 +9,9 @@ const PostSchema = new mongoose.Schema(
       required: true,
     },
     likes: {
-      type: Number,
+      type: Array,
       required: true,
-      default: 0,
+      default: [],
     },
     isDelete: {
       type: Boolean,
