@@ -1,8 +1,22 @@
 const express = require("express");
 const router = express.Router();
 
-const { createPost } = require("../controllers/postController")
+const {
+  createPost,
+  getAllPosts,
+  getPostById,
+  getPostsByUserId,
+  addLikes,
+  softDeletePost,
+  permanentDeletePost,
+} = require("../controllers/postController");
 
-router.post('/', createPost);
+router.post("/", createPost);
+router.get("/", getAllPosts);
+router.get("/:postId", getPostById);
+router.get("/user/:userId", getPostsByUserId);
+router.post("/like/:postId", addLikes);
+router.post("/soft-delete/:postId", softDeletePost);
+router.delete("/hard-delete/:postId", permanentDeletePost);
 
 module.exports = router;
