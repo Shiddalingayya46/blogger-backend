@@ -2,23 +2,30 @@ const Post = require("../models/posts");
 const User = require("../models/User");
 
 const createPost = async (req, res) => {
-  const { description, userId } = req.body;
-
-  if (!userId || !description) {
-    return res
-      .status(400)
-      .json({ message: "description and userId are required" });
-  }
-
   try {
+    const { description, userId, imageBase64, contentType } = req.body;
+
+    if (!userId || !description || !imageBase64) {
+      return res
+        .status(400)
+        .json({ message: "description, userId, and image are required" });
+    }
+
     const userExists = await User.findById(userId);
     if (!userExists) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const newPost = new Post({ description, userId });
-    const savedPost = await newPost.save();
+    const newPost = new Post({
+      description,
+      userId,
+      imageData: {
+        data: Buffer.from(imageBase64, "base64"), // convert base64 to binary
+        contentType,
+      },
+    });
 
+    const savedPost = await newPost.save();
     res.status(201).json(savedPost);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -28,8 +35,8 @@ const createPost = async (req, res) => {
 const toggleLike = async (req, res) => {
   try {
     const { postId, userId } = req.body;
-    console.log('userId:', userId);
-    console.log('postId:', postId);
+    console.log("userId:", userId);
+    console.log("postId:", postId);
 
     if (!postId) {
       return res.status(400).json({ message: "Post ID cannot be empty" });
@@ -48,7 +55,9 @@ const toggleLike = async (req, res) => {
     let action;
     if (post.likes.includes(userId)) {
       // Unlike
-      post.likes = post.likes.filter(id => id.toString() !== userId.toString());
+      post.likes = post.likes.filter(
+        (id) => id.toString() !== userId.toString()
+      );
       action = "unliked";
     } else {
       // Like
@@ -61,15 +70,13 @@ const toggleLike = async (req, res) => {
     return res.status(200).json({
       message: `Post ${action} successfully`,
       likesCount: post.likes.length,
-      likes: post.likes
+      likes: post.likes,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 const getAllPosts = async (req, res) => {
   try {

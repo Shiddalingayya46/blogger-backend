@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const PostSchema = new mongoose.Schema(
   {
     description: {
@@ -17,7 +18,12 @@ const PostSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    imageData: {
+      data: Buffer, // binary data
+      contentType: String, // e.g., "image/png"
+    },
   },
   { timestamps: true }
 );
+
 module.exports = mongoose.model("post", PostSchema);

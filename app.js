@@ -2,8 +2,13 @@ const express = require("express");
 const connectDB = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const postRoutes = require("./routes/postRoutes");
+const cors = require("cors");
 
 const app = express();
+app.use(express.json({ limit: "10mb" })); // or higher if needed
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+app.use(cors());
 const port = 3000;
 
 // Connect to MongoDB
