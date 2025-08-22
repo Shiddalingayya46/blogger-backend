@@ -14,6 +14,11 @@ const PostSchema = new mongoose.Schema(
       required: true,
       default: [],
     },
+    disLikes: {
+      type: Array,
+      required: true,
+      default: [],
+    },
     isDelete: {
       type: Boolean,
       default: false,

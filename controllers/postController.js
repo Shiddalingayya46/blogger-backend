@@ -32,52 +32,6 @@ const createPost = async (req, res) => {
   }
 };
 
-const toggleLike = async (req, res) => {
-  try {
-    const { postId, userId } = req.body;
-    console.log("userId:", userId);
-    console.log("postId:", postId);
-
-    if (!postId) {
-      return res.status(400).json({ message: "Post ID cannot be empty" });
-    }
-
-    if (!userId) {
-      return res.status(400).json({ message: "User ID cannot be empty" });
-    }
-
-    const post = await Post.findOne({ _id: postId });
-
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
-
-    let action;
-    if (post.likes.includes(userId)) {
-      // Unlike
-      post.likes = post.likes.filter(
-        (id) => id.toString() !== userId.toString()
-      );
-      action = "unliked";
-    } else {
-      // Like
-      post.likes.push(userId);
-      action = "liked";
-    }
-
-    await post.save();
-
-    return res.status(200).json({
-      message: `Post ${action} successfully`,
-      likesCount: post.likes.length,
-      likes: post.likes,
-    });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
 const getAllPosts = async (req, res) => {
   try {
     const posts = await Post.find({ isDelete: { $ne: true } }); // optional: filter out deleted posts
@@ -174,12 +128,74 @@ const permanentDeletePost = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+const handlePostReaction = async (req, res) => {
+  try {
+    const { userId, postId, action } = req.body; // action = true (like), false (dislike)
+
+    if (!userId || !postId || action === undefined) {
+      return res.status(400).json({ message: "Invalid request" });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    if (!post.likes) post.likes = [];
+    if (!post.disLikes) post.disLikes = [];
+
+    if (action === true) {
+      // --- LIKE operation ---
+      if (post.likes.includes(userId)) {
+        // Already liked → remove like
+        post.likes = post.likes.filter(
+          (id) => id.toString() !== userId.toString()
+        );
+      } else {
+        // Add like → ensure dislike is removed
+        post.disLikes = post.disLikes.filter(
+          (id) => id.toString() !== userId.toString()
+        );
+        post.likes.push(userId);
+      }
+    } else {
+      // --- DISLIKE operation ---
+      if (post.disLikes.includes(userId)) {
+        // Already disliked → remove dislike
+        post.disLikes = post.disLikes.filter(
+          (id) => id.toString() !== userId.toString()
+        );
+      } else {
+        // Add dislike → ensure like is removed
+        post.likes = post.likes.filter(
+          (id) => id.toString() !== userId.toString()
+        );
+        post.disLikes.push(userId);
+      }
+    }
+
+    await post.save();
+
+    return res.status(200).json({
+      message: action ? "Like action processed" : "Dislike action processed",
+      likesCount: post.likes.length,
+      dislikesCount: post.disLikes.length,
+      likes: post.likes,
+      dislikes: post.disLikes,
+    });
+  } catch (error) {
+    console.error("Reaction error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   createPost,
-  toggleLike,
   getAllPosts,
   getPostById,
   getPostsByUserId,
   permanentDeletePost,
   softDeletePost,
+  handlePostReaction,
 };

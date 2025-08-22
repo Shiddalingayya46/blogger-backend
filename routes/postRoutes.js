@@ -8,15 +8,15 @@ const {
   getPostsByUserId,
   softDeletePost,
   permanentDeletePost,
-  toggleLike,
+  handlePostReaction,
 } = require("../controllers/postController");
 
 router.post("/", createPost);
 router.get("/", getAllPosts);
 router.get("/:postId", getPostById);
 router.get("/user/:userId", getPostsByUserId);
-router.post("/like", toggleLike);
 router.post("/soft-delete/:postId", softDeletePost);
 router.delete("/hard-delete/:postId", permanentDeletePost);
+router.put("/reaction", handlePostReaction);
 
 module.exports = router;
