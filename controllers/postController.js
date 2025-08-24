@@ -124,13 +124,18 @@ const getDeletedPosts = async (req, res) => {
 };
 
 // SOFT DELETE
-const softDeletePost = async (req, res) => {
+const toggleDeletePost = async (req, res) => {
   try {
     const { postId } = req.params;
+    const { softDelete } = req.body; // expecting a boolean
+
+    if (typeof softDelete !== "boolean") {
+      return res.status(400).json({ error: "softDelete must be a boolean" });
+    }
 
     const post = await Post.findByIdAndUpdate(
       postId,
-      { isDeleted: true },
+      { isDeleted: softDelete },
       { new: true }
     );
 
@@ -138,9 +143,10 @@ const softDeletePost = async (req, res) => {
       return res.status(404).json({ error: "Post not found" });
     }
 
-    res.json({ message: "Post soft deleted", post });
+    const message = softDelete ? "Post soft deleted" : "Post restored from bin";
+    res.json({ message, post });
   } catch (error) {
-    res.status(500).json({ error: "Error soft deleting post" });
+    res.status(500).json({ error: "Error updating post" });
   }
 };
 
@@ -223,7 +229,7 @@ module.exports = {
   getPostById,
   getUserPosts,
   getDeletedPosts,
-  softDeletePost,
+  toggleDeletePost,
   permanentDeletePost,
   handlePostReaction,
 };
