@@ -1,34 +1,22 @@
 const mongoose = require("mongoose");
 
-const PostSchema = new mongoose.Schema(
+const postSchema = new mongoose.Schema(
   {
-    description: {
-      type: String,
-    },
     userId: {
-      type: Object,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    likes: {
-      type: Array,
-      required: true,
-      default: [],
-    },
-    disLikes: {
-      type: Array,
-      required: true,
-      default: [],
-    },
-    isDelete: {
-      type: Boolean,
-      default: false,
-    },
+    description: String,
     imageData: {
-      data: Buffer, // binary data
-      contentType: String, // e.g., "image/png"
+      data: Buffer,
+      contentType: String,
     },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    disLikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    isDeleted: { type: Boolean, default: false }, // ✅ Soft delete flag
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("post", PostSchema);
+module.exports = mongoose.model("Post", postSchema);

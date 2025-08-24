@@ -1,6 +1,7 @@
 const Post = require("../models/posts");
 const User = require("../models/User");
 
+// Create Post
 const createPost = async (req, res) => {
   try {
     const { description, userId, imageBase64, contentType } = req.body;
@@ -20,7 +21,7 @@ const createPost = async (req, res) => {
       description,
       userId,
       imageData: {
-        data: Buffer.from(imageBase64, "base64"), // convert base64 to binary
+        data: Buffer.from(imageBase64, "base64"),
         contentType,
       },
     });
@@ -32,27 +33,40 @@ const createPost = async (req, res) => {
   }
 };
 
+// Get ALL active posts (paginated)
 const getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find({ isDelete: { $ne: true } }); // optional: filter out deleted posts
-    return res.status(200).json(posts);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const posts = await Post.find({ isDeleted: false }) // ✅ fixed
+      .populate("userId", "name _id")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const totalPosts = await Post.countDocuments({ isDeleted: false });
+
+    return res.status(200).json({
+      posts,
+      totalPosts,
+      totalPages: Math.ceil(totalPosts / limit),
+      currentPage: page,
+    });
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
+// Get SINGLE post by ID
 const getPostById = async (req, res) => {
   try {
     const { postId } = req.params;
-
-    if (!postId) {
-      return res.status(400).json({ message: "Post ID is required" });
-    }
-
     const post = await Post.findById(postId);
 
-    if (!post || post.isDelete) {
+    if (!post || post.isDeleted) {
       return res.status(404).json({ message: "Post not found" });
     }
 
@@ -63,72 +77,88 @@ const getPostById = async (req, res) => {
   }
 };
 
-const getPostsByUserId = async (req, res) => {
+// Get ACTIVE posts by user
+const getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
+    let { page = 1, limit = 5 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
 
-    if (!userId) {
-      return res.status(400).json({ message: "User ID is required" });
-    }
+    const query = { userId, isDeleted: false };
+    const totalPosts = await Post.countDocuments(query);
+    const totalPages = Math.ceil(totalPosts / limit);
 
-    // const posts = await Post.find({ userId, isDelete: { $ne: true } });
-    const posts = await Post.find({ userId, isDelete: false });
+    const posts = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
 
-    return res.status(200).json(posts);
+    res.json({ posts, totalPages, currentPage: page, totalPosts });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    res.status(500).json({ error: "Error fetching posts" });
   }
 };
 
+// Get DELETED posts by user
+const getDeletedPosts = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    let { page = 1, limit = 5 } = req.query;
+    page = parseInt(page);
+    limit = parseInt(limit);
+
+    const query = { userId, isDeleted: true };
+    const totalPosts = await Post.countDocuments(query);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    const posts = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({ posts, totalPages, currentPage: page, totalPosts });
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching deleted posts" });
+  }
+};
+
+// SOFT DELETE
 const softDeletePost = async (req, res) => {
-  const { postId } = req.params;
-  console.log("postId: ", postId);
-
   try {
-    const post = await Post.findById(postId);
+    const { postId } = req.params;
+
+    const post = await Post.findByIdAndUpdate(
+      postId,
+      { isDeleted: true },
+      { new: true }
+    );
+
     if (!post) {
-      return res.status(404).json({ message: "Post not found" });
+      return res.status(404).json({ error: "Post not found" });
     }
 
-    if (post.isDelete) {
-      return res
-        .status(400)
-        .json({ message: "Post is already marked as deleted" });
-    }
-
-    post.isDelete = true;
-    await post.save();
-
-    res.status(200).json({ message: "Post marked as deleted", post });
+    res.json({ message: "Post soft deleted", post });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Error soft deleting post" });
   }
 };
 
+// PERMANENT DELETE
 const permanentDeletePost = async (req, res) => {
-  const { postId } = req.params;
-
   try {
-    const post = await Post.findById(postId);
-    if (!post) {
-      return res.status(404).json({ message: "Post not found" });
-    }
+    const { postId } = req.params;
+    const deleted = await Post.findByIdAndDelete(postId);
 
-    if (!post.isDelete) {
-      return res
-        .status(400)
-        .json({ message: "Post is not marked for deletion" });
-    }
+    if (!deleted) return res.status(404).json({ error: "Post not found" });
 
-    await Post.findByIdAndDelete(postId);
-
-    res.status(200).json({ message: "Post permanently deleted" });
+    res.json({ message: "Post permanently deleted" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Error permanently deleting post" });
   }
 };
 
+// LIKE / DISLIKE
 const handlePostReaction = async (req, res) => {
   try {
     const { userId, postId, action } = req.body; // action = true (like), false (dislike)
@@ -138,36 +168,33 @@ const handlePostReaction = async (req, res) => {
     }
 
     const post = await Post.findById(postId);
-    if (!post) {
+    if (!post || post.isDeleted) {
       return res.status(404).json({ message: "Post not found" });
     }
 
+    // init arrays
     if (!post.likes) post.likes = [];
     if (!post.disLikes) post.disLikes = [];
 
     if (action === true) {
-      // --- LIKE operation ---
+      // LIKE
       if (post.likes.includes(userId)) {
-        // Already liked → remove like
         post.likes = post.likes.filter(
           (id) => id.toString() !== userId.toString()
         );
       } else {
-        // Add like → ensure dislike is removed
         post.disLikes = post.disLikes.filter(
           (id) => id.toString() !== userId.toString()
         );
         post.likes.push(userId);
       }
     } else {
-      // --- DISLIKE operation ---
+      // DISLIKE
       if (post.disLikes.includes(userId)) {
-        // Already disliked → remove dislike
         post.disLikes = post.disLikes.filter(
           (id) => id.toString() !== userId.toString()
         );
       } else {
-        // Add dislike → ensure like is removed
         post.likes = post.likes.filter(
           (id) => id.toString() !== userId.toString()
         );
@@ -194,8 +221,9 @@ module.exports = {
   createPost,
   getAllPosts,
   getPostById,
-  getPostsByUserId,
-  permanentDeletePost,
+  getUserPosts,
+  getDeletedPosts,
   softDeletePost,
+  permanentDeletePost,
   handlePostReaction,
 };
