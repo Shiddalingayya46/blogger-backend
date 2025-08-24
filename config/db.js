@@ -9,7 +9,7 @@ async function connectToMongoDB() {
       useUnifiedTopology: true,
     });
 
-    console.log('✅ Connected to MongoDB Atlas!');
+    console.log('✅ Connected to MongoDB');
   } catch (err) {
     console.error('❌ MongoDB connection error:');
     console.error(err);
