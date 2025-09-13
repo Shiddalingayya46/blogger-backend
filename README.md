@@ -11,7 +11,6 @@
 
 - **User Authentication & Authorization**
   - Sign up, login, logout
-  - JWT-based authentication
   - Role-based access control (User)
 
 - **CRUD Operations for Blog Posts**
@@ -37,7 +36,6 @@
 - **Frontend:** React.js / HTML / CSS / JavaScript / Tailwind CSS or Bootstrap
 - **Backend:** Node.js / Express.js
 - **Database:** MongoDB (Mongoose)
-- **Authentication:** JWT (JSON Web Token)
 - **Other Tools:** Postman, Git & GitHub, dotenv
 
 ---
@@ -80,3 +78,4 @@
 - Tags and categories filtering
 - Search functionality
 - Pagination
+
