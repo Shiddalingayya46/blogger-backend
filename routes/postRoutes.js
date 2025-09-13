@@ -5,7 +5,7 @@ const {
   createPost,
   getAllPosts,
   getPostById,
-  getUserPosts, // ✅ fixed name
+  getUserPosts, 
   permanentDeletePost,
   handlePostReaction,
   getDeletedPosts,
@@ -15,7 +15,7 @@ const {
 router.post("/", createPost);
 router.get("/", getAllPosts);
 router.get("/:postId", getPostById);
-router.get("/user/:userId", getUserPosts); // ✅ fixed name
+router.get("/user/:userId", getUserPosts); 
 router.put("/soft-delete/:postId", toggleDeletePost);
 router.delete("/permanent-delete/:postId", permanentDeletePost);
 router.put("/reaction", handlePostReaction);

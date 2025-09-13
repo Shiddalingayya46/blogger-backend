@@ -1,7 +1,6 @@
 const Post = require("../models/posts");
 const User = require("../models/User");
 
-// Create Post
 const createPost = async (req, res) => {
   try {
     const { description, userId, imageBase64, contentType } = req.body;
@@ -33,14 +32,14 @@ const createPost = async (req, res) => {
   }
 };
 
-// Get ALL active posts (paginated)
+
 const getAllPosts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const skip = (page - 1) * limit;
 
-    const posts = await Post.find({ isDeleted: false }) // ✅ fixed
+    const posts = await Post.find({ isDeleted: false }) 
       .populate("userId", "name _id")
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -60,7 +59,7 @@ const getAllPosts = async (req, res) => {
   }
 };
 
-// Get SINGLE post by ID
+
 const getPostById = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -77,7 +76,7 @@ const getPostById = async (req, res) => {
   }
 };
 
-// Get ACTIVE posts by user
+
 const getUserPosts = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -100,7 +99,7 @@ const getUserPosts = async (req, res) => {
   }
 };
 
-// Get DELETED posts by user
+
 const getDeletedPosts = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -123,16 +122,17 @@ const getDeletedPosts = async (req, res) => {
   }
 };
 
-// SOFT DELETE
+
 const toggleDeletePost = async (req, res) => {
   try {
     const { postId } = req.params;
-    const { softDelete } = req.body; // expecting a boolean
+    const { softDelete } = req.body; 
 
     if (typeof softDelete !== "boolean") {
       return res.status(400).json({ error: "softDelete must be a boolean" });
     }
 
+    
     const post = await Post.findByIdAndUpdate(
       postId,
       { isDeleted: softDelete },
@@ -150,7 +150,6 @@ const toggleDeletePost = async (req, res) => {
   }
 };
 
-// PERMANENT DELETE
 const permanentDeletePost = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -164,26 +163,27 @@ const permanentDeletePost = async (req, res) => {
   }
 };
 
-// LIKE / DISLIKE
+
 const handlePostReaction = async (req, res) => {
   try {
-    const { userId, postId, action } = req.body; // action = true (like), false (dislike)
+    const { userId, postId, action } = req.body; 
 
     if (!userId || !postId || action === undefined) {
       return res.status(400).json({ message: "Invalid request" });
     }
 
     const post = await Post.findById(postId);
+    
     if (!post || post.isDeleted) {
       return res.status(404).json({ message: "Post not found" });
     }
 
-    // init arrays
+  
     if (!post.likes) post.likes = [];
     if (!post.disLikes) post.disLikes = [];
 
     if (action === true) {
-      // LIKE
+
       if (post.likes.includes(userId)) {
         post.likes = post.likes.filter(
           (id) => id.toString() !== userId.toString()
@@ -195,7 +195,7 @@ const handlePostReaction = async (req, res) => {
         post.likes.push(userId);
       }
     } else {
-      // DISLIKE
+     
       if (post.disLikes.includes(userId)) {
         post.disLikes = post.disLikes.filter(
           (id) => id.toString() !== userId.toString()

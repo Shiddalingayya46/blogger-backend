@@ -19,8 +19,8 @@ const userSchema = new mongoose.Schema(
       minlength: 6,
     },
     profilePicture: {
-      data: Buffer, // binary data
-      contentType: String, // e.g., "image/png"
+      data: Buffer, 
+      contentType: String, 
     },
   },
   {
@@ -28,5 +28,4 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// ✅ Use existing model if already registered
 module.exports = mongoose.models.User || mongoose.model("User", userSchema);

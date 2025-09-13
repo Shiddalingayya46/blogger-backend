@@ -5,31 +5,26 @@ const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if user already exists
+   
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    // Hash the password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+   const saltRounds = 10;
+   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user with hashed password
-    const user = new User({ name, email, password: hashedPassword });
-    await user.save();
+   const user = new User({ name, email, password: hashedPassword });
+   await user.save();
 
-    // Avoid returning password in response
-    const { password: _, ...userWithoutPassword } = user.toObject();
-
-    res.status(201).json(userWithoutPassword);
-  } catch (err) {
+   const { password: _, ...userWithoutPassword } = user.toObject();
+   res.status(201).json(userWithoutPassword);
+   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server Error" });
   }
 };
 
-// Get all users
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find().select("-password");
@@ -40,7 +35,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// Delete a user by ID
 const deleteUser = async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -87,14 +81,13 @@ const updateUser = async (req, res) => {
     }
     const { name, imageBase64, contentType } = req.body;
 
-    // const user = await User.findOne({ userId });
+
     const user = await User.findById(userId);
     console.log("user: ", user);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ✅ Only update allowed fields
     if (name) {
       user.name = name;
     }
@@ -104,7 +97,6 @@ const updateUser = async (req, res) => {
         contentType,
       };
     }
-
     await user.save();
 
     const { password, ...userWithoutPassword } = user.toObject();
@@ -118,15 +110,16 @@ const updateUser = async (req, res) => {
   }
 };
 
-// ✅ Get user by ID
-const getUserById = async (req, res) => {
+  const getUserById = async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log(userId);
 
     if (!userId) {
       return res.status(404).json({ message: "userId missing in params" });
     }
-    const user = await User.findById(userId).select("-password"); // exclude password
+
+    const user = await User.findById(userId).select("-password"); 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

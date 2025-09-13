@@ -14,7 +14,7 @@ const postSchema = new mongoose.Schema(
     },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     disLikes: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    isDeleted: { type: Boolean, default: false }, // ✅ Soft delete flag
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
